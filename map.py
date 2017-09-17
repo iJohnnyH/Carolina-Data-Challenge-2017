@@ -1,6 +1,6 @@
 import matplotlib.pyplot as mp
 import matplotlib.cm
-#import datadotworld as dw
+import datadotworld as dw
 import numpy as np
 import json
 import requests
