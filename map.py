@@ -1,18 +1,21 @@
 import matplotlib.pyplot as mp
 import matplotlib.cm
-import datadotworld as dw
+#import datadotworld as dw
 import numpy as np
+import json
+import requests
 
 from mpl_toolkits.basemap import Basemap
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
+
+gMapsAPIKey = 'AIzaSyDCt_yZ6rzR2zNLUdJ8Fb8ChEmBhu8-YE8'
 dataset_key = 'https://data.world/justinmmott/nc-voter-registration'
 dataset_local = dw.load_dataset(dataset_key)  # cached under ~/.dw/cache
 #dataset_local.describe('actual_voter_registration')
 results = dw.query('https://data.world/justinmmott/nc-voter-registration', 'SELECT * FROM actual_voter_registration')
 print (results.table[1])
-
 
 fig, ax = mp.subplots(figsize=(20,40))
 
@@ -33,17 +36,6 @@ m.drawcoastlines()
 m.readshapefile('cb_2016_us_county_500k/cb_2016_us_county_500k', 'county')
 county_names = []
 colors={}
-for shape_dict in m.county_info:
-    countyname=shape_dict['NAME']
-    if countyname in ['Wake','Mecklenburg']:
-        colors[countyname]='#AAAAAA'
-    county_names.append(countyname)
-ax = mp.gca()
-for nshape,seg in enumerate(m.county):
-    if county_names[nshape] in ['Wake','Mecklenburg']:
-        color = colors[county_names[nshape]]
-        poly = Polygon(seg,facecolor=color,edgecolor=color)
-        ax.add_patch(poly)
 
 m.readshapefile('cb_2016_us_state_500k/cb_2016_us_state_500k', 'states')
 state_names = []
@@ -60,7 +52,46 @@ for nshape,seg in enumerate(m.states):
         poly = Polygon(seg,facecolor=color,edgecolor=color)
         ax.add_patch(poly)
 
-mp.show()
+
+
+
+
+
+
+########Onclick
+def onclick(event):
+    lonpt,latpt = m(event.xdata, event.ydata, inverse=True)
+    PARAMS = {'latlng': str(latpt) + ',' + str(lonpt),
+              'key': gMapsAPIKey}
+    r = requests.get('https://maps.googleapis.com/maps/api/geocode/json', PARAMS)
+    data = r.json()
+    payload = data['results'][0]
+    inNC = False;
+
+    for component in payload['address_components']:
+        if ('administrative_area_level_1' in component['types']):
+            if (component['short_name'] == 'NC'):
+                inNC = True
+    if (inNC):
+        for component in payload['address_components']:
+            if ('administrative_area_level_2' in component['types']):
+                county = component['long_name'].replace(' County','')
+        for shape_dict in m.county_info:
+            countyname=shape_dict['NAME']
+            if (countyname == county):
+                colors[countyname]='#AAAAAA'
+            county_names.append(countyname)
+        ax = mp.gca()
+        for nshape,seg in enumerate(m.county):
+            if (county_names[nshape] == county):
+                color = colors[county_names[nshape]] 
+                poly = Polygon(seg,facecolor=color,edgecolor=color)
+                ax.add_patch(poly)
+        print(county)
+
+fig.canvas.mpl_connect('button_press_event', onclick)
+
+mp.plot()
 fig, ax = mp.subplots(figsize=(20,40))
 
 m2 = Basemap(resolution = 'i',
