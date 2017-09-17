@@ -129,8 +129,11 @@ textvar = text.text(0, 0, 1, fontsize=38)
 c=1
 visited1 = 0
 
+
 ########Onclick
 def onclick(event):
+    winR = 0
+    winD = 0
     reploss = 0
     demloss = 0
     if event.button==1:
@@ -184,7 +187,7 @@ def onclick(event):
                     rep[i] = rep[i] + int(county_stuff[x][0])
                     dem[i] =  dem[i] + int(county_stuff[x][1])
 
-                    
+
             if (rep[i] > dem[i]):
                 reploss = reploss + (rep[i] - dem[i])
                 disW[i] = True
@@ -204,7 +207,7 @@ def onclick(event):
         m4.drawcoastlines()
         #m2.drawcounties(linewidth=0.5, linestyle='solid', color='white', antialiased=1, facecolor='none', ax=None, zorder=None, drawbounds=True)
         m4.readshapefile('cb_2016_us_county_500k/cb_2016_us_county_500k', 'county')
-
+        
         m4.readshapefile('cb_2016_us_state_500k/cb_2016_us_state_500k', 'states')
         statenumbers1=[]
         county_names1 = []
@@ -241,6 +244,17 @@ def onclick(event):
                 colors[statename]='#ffffff'
             state_names.append(statename)
         ax = mp.gca()
+        for i in range(1,14):
+            if(disW[i]):
+                winR = winR +1
+            else:
+                winD = winD +1 
+        for txt in text.texts:
+            txt.set_visible(False)
+        text2= ax
+        for txt in ax.texts:
+            txt.set_visible(False) 
+        textvar2 = ax.text(1000, 0, "E "+str(round(e,3))+ "\nRep " + str(winR) + "\nDem " + str(winD), fontsize=30)
         for nshape,seg in enumerate(m.states):
             if state_names[nshape] in ['South Carolina','Tennessee','Georgia','Virginia']:
                 color = colors[state_names[nshape]]
@@ -256,7 +270,7 @@ def onclick(event):
         textvar = text.text(0, 0, c, fontsize=38)
         mp.draw()
 fig.canvas.mpl_connect('button_press_event', onclick)
-
+mp.title("Redistricting NC Counties")
 mp.plot()
     
 
@@ -276,21 +290,39 @@ m2.fillcontinents(color='green',lake_color='#46bcec')
 m2.drawcoastlines()
 #m2.drawcounties(linewidth=0.5, linestyle='solid', color='white', antialiased=1, facecolor='none', ax=None, zorder=None, drawbounds=True)
 m2.readshapefile('cb_2013_us_cd113_500k/cb_2013_us_cd113_500k', 'district')
+district_nums = []
+district_codes = []
+district_colors=['#0000e6','#6600cc','#00ff00','#ff3300','#997a00','#663300','#006666','#cccccc','#4d0000','#ffcc99','#33331a','#d98c8c','#33ffcc']
+colors={}
+for district_dict in m2.district_info:
+    districtnum=district_dict['STATEFP']
+    districtcode=int(district_dict['CD113FP'])
+    if (districtnum == '37') and (districtcode <= 13):
+        colors[districtnum]=district_colors[districtcode-1]
+    district_nums.append(districtnum)
+    district_codes.append(districtcode)
+ax = mp.gca()
+for nshape,seg in enumerate(m2.district):
+    if (district_nums[nshape] =='37') and (int(district_codes[nshape]) <= 13):
+        color = district_colors[int(district_codes[nshape])-1]
+        poly = Polygon(seg,facecolor=color,edgecolor=color)
+        ax.add_patch(poly)
 
 m2.readshapefile('cb_2016_us_state_500k/cb_2016_us_state_500k', 'states')
 state_names = []
 colors={}
-for shape_dict in m.states_info:
+for shape_dict in m2.states_info:
     statename=shape_dict['NAME']
     if statename in ['South Carolina','Tennessee','Georgia','Virginia']:
         colors[statename]='#ffffff'
     state_names.append(statename)
 ax = mp.gca()
-for nshape,seg in enumerate(m.states):
+for nshape,seg in enumerate(m2.states):
     if state_names[nshape] in ['South Carolina','Tennessee','Georgia','Virginia']:
         color = colors[state_names[nshape]]
         poly = Polygon(seg,facecolor=color,edgecolor=color)
         ax.add_patch(poly)
+mp.title("2013 District Map")
 mp.plot()
 
 fig, ax = mp.subplots(figsize=(20,40))
@@ -325,7 +357,7 @@ for countyasdf in county_stuffog.keys():
         county_names1.append(countyname1)
         statenumbers1.append(statenumber1)
     ax = mp.gca()
-    for nshape,seg in enumerate(m.county):
+    for nshape,seg in enumerate(m3.county):
         if (county_names1[nshape] == countyasdf) and (statenumbers1[nshape]=="37"):
             color = colors1[countyasdf] 
             poly = Polygon(seg,facecolor=color,edgecolor=color)
@@ -342,7 +374,7 @@ for nshape,seg in enumerate(m.county):
         poly = Polygon(seg,facecolor=color,edgecolor=color)
         ax.add_patch(poly)
 
-for shape_dict in m.states_info:
+for shape_dict in m3.states_info:
     statename=shape_dict['NAME']
     if statename in ['South Carolina','Tennessee','Georgia','Virginia']:
         colors[statename]='#ffffff'
@@ -353,6 +385,7 @@ for nshape,seg in enumerate(m.states):
         color = colors[state_names[nshape]]
         poly = Polygon(seg,facecolor=color,edgecolor=color)
         ax.add_patch(poly)
+mp.title("NC Counties by Majority Party")
 mp.show()
 
 
