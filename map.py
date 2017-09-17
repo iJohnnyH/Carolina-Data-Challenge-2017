@@ -21,8 +21,8 @@ botlong = -84.3
 toplat = 36.545
 toplong = -75.4
 
-m = Basemap(resolution = 'i', 
-           projection = 'tmerc',    
+m = Basemap(resolution = 'i',
+           projection = 'tmerc',
            llcrnrlon=botlong, llcrnrlat=botlat, urcrnrlon=toplong, urcrnrlat=toplat,
            lat_0=(botlat+toplat)/2, lon_0=(botlong + toplong)/2)
 
@@ -30,7 +30,7 @@ m.drawmapboundary(fill_color='#46bcec')
 m.fillcontinents(color='green',lake_color='#46bcec')
 m.drawcoastlines()
 #m.readshapefile('cb_2016_us_cd115_500k/cb_2016_us_cd115_500k', 'district')
-m.readshapefile('cb_2016_us_county_500k\cb_2016_us_county_500k', 'county')
+m.readshapefile('cb_2016_us_county_500k/cb_2016_us_county_500k', 'county')
 county_names = []
 colors={}
 for shape_dict in m.county_info:
@@ -41,10 +41,10 @@ for shape_dict in m.county_info:
 ax = mp.gca()
 for nshape,seg in enumerate(m.county):
     if county_names[nshape] in ['Wake','Mecklenburg']:
-        color = colors[county_names[nshape]] 
+        color = colors[county_names[nshape]]
         poly = Polygon(seg,facecolor=color,edgecolor=color)
         ax.add_patch(poly)
-    
+
 m.readshapefile('cb_2016_us_state_500k/cb_2016_us_state_500k', 'states')
 state_names = []
 colors={}
@@ -56,16 +56,16 @@ for shape_dict in m.states_info:
 ax = mp.gca()
 for nshape,seg in enumerate(m.states):
     if state_names[nshape] in ['South Carolina','Tennessee','Georgia','Virginia']:
-        color = colors[state_names[nshape]] 
+        color = colors[state_names[nshape]]
         poly = Polygon(seg,facecolor=color,edgecolor=color)
         ax.add_patch(poly)
 
 mp.show()
 fig, ax = mp.subplots(figsize=(20,40))
 
-m2 = Basemap(resolution = 'i', 
+m2 = Basemap(resolution = 'i',
            projection = 'tmerc',
-          
+
            llcrnrlon=-84.3, llcrnrlat=33.8, urcrnrlon=-75.5, urcrnrlat=36.53,
            lat_0=35.165, lon_0=-79.9)
 m2.drawmapboundary(fill_color='#46bcec')
@@ -85,7 +85,7 @@ for shape_dict in m.states_info:
 ax = mp.gca()
 for nshape,seg in enumerate(m.states):
     if state_names[nshape] in ['South Carolina','Tennessee','Georgia','Virginia']:
-        color = colors[state_names[nshape]] 
+        color = colors[state_names[nshape]]
         poly = Polygon(seg,facecolor=color,edgecolor=color)
         ax.add_patch(poly)
 mp.show()
