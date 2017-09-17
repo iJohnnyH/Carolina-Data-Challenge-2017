@@ -7,8 +7,13 @@ from mpl_toolkits.basemap import Basemap
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
-dataset_key = 'https://data.world/carolinadata/north-carolina-elections'
+dataset_key = 'https://data.world/justinmmott/nc-voter-registration'
 dataset_local = dw.load_dataset(dataset_key)  # cached under ~/.dw/cache
+#dataset_local.describe('actual_voter_registration')
+results = dw.query('https://data.world/justinmmott/nc-voter-registration', 'SELECT * FROM actual_voter_registration')
+print (results.table[1])
+
+
 fig, ax = mp.subplots(figsize=(20,40))
 
 botlat = 33.8
