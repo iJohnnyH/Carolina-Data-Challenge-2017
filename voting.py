@@ -1,3 +1,4 @@
+
 import csv
 
 with open('actual_voter_registration.csv', 'w', newline='') as w:
