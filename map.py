@@ -4,6 +4,7 @@ import matplotlib.cm
 import numpy as np
 import json
 import requests
+import csv
 
 from matplotlib.widgets import Button
 from mpl_toolkits.basemap import Basemap
@@ -17,6 +18,14 @@ gMapsAPIKey = 'AIzaSyDCt_yZ6rzR2zNLUdJ8Fb8ChEmBhu8-YE8'
 #dataset_local = dw.load_dataset(dataset_key,force_update=True)  # cached under ~/.dw/cache
 #dataset_local.describe('by_the_numbers')
 #county_names = dw.query('https://data.world/justinmmott/nc-voter-registration', 'SELECT county FROM by_the_numbers')
+
+county_stuff = {}
+districts = []
+
+with open('By_The_Numbers.csv', mode ='r') as w:
+    reader = csv.DictReader(w)
+    for row in reader: 
+        county_stuff[row['county']] = [row['rep'] , row['dem']]
 
 
 #Class created for previous and next buttons for districts
@@ -149,8 +158,6 @@ def onclick(event):
         textvar = text.text(0, 0, c, fontsize=38)
         mp.draw()
 fig.canvas.mpl_connect('button_press_event', onclick)
-
-
 
 mp.plot()
     
