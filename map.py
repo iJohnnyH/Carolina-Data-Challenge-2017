@@ -1,6 +1,6 @@
 import matplotlib.pyplot as mp
 import matplotlib.cm
-import datadotworld as dw
+#import datadotworld as dw
 import numpy as np
 import json
 import requests
@@ -10,37 +10,38 @@ from mpl_toolkits.basemap import Basemap
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
+from pynput import keyboard
 
 gMapsAPIKey = 'AIzaSyDCt_yZ6rzR2zNLUdJ8Fb8ChEmBhu8-YE8'
-gMapsAPIKey = 'AIzaSyDCt_yZ6rzR2zNLUdJ8Fb8ChEmBhu8-YE8'
-dataset_key = 'https://data.world/justinmmott/nc-voter-registration'
-dataset_local = dw.load_dataset(dataset_key,force_update=True)  # cached under ~/.dw/cache
-dataset_local.describe('by_the_numbers')
-county_names = dw.query('https://data.world/justinmmott/nc-voter-registration', 'SELECT county FROM by_the_numbers')
+#dataset_key = 'https://data.world/justinmmott/nc-voter-registration'
+#dataset_local = dw.load_dataset(dataset_key,force_update=True)  # cached under ~/.dw/cache
+#dataset_local.describe('by_the_numbers')
+#county_names = dw.query('https://data.world/justinmmott/nc-voter-registration', 'SELECT county FROM by_the_numbers')
 
 
 #Class created for previous and next buttons for districts
+"""
 class Index(object):
     ind = 1
     def next(self, event):
         self.ind += 1
         if (self.ind > 13):
             self.ind = 1
-        #for txt in text.texts:
-        #    txt.set_visible(False)
-        #textvar = text.text(0, 0, self.ind, fontsize=28)
+        for txt in text.texts:
+            txt.set_visible(False)
+        textvar = text.text(0, 0, self.ind, fontsize=28)
         #plt.draw()
         print (self.ind)
     def prev(self, event):
         self.ind -= 1
         if (self.ind < 1):
             self.ind = 13
-        #for txt in text.texts:
-        #    txt.set_visible(False)
-        #textvar = text.text(0, 0, self.ind, fontsize=28)
+        for txt in text.texts:
+            txt.set_visible(False)
+        textvar = text.text(0, 0, self.ind, fontsize=28)
         #plt.draw()
         print (self.ind)
-
+"""
 
 #Sets plot size
 fig, ax = mp.subplots(figsize=(20,40))
@@ -79,61 +80,84 @@ for nshape,seg in enumerate(m.states):
         poly = Polygon(seg,facecolor=color,edgecolor=color)
         ax.add_patch(poly)
 
-
+"""
 callback = Index()
-#axprev = mp.axes([0.5, 0.05, 0.2, 0.075])
-#axnext = mp.axes([0.75, 0.05, 0.2, 0.075])
-#text = mp.axes([0.0, 0.05, 0.0, 0.075])
-#textvar = text.text(0, 0, 1, fontsize=28)
-#text.axis('off')
-#bnext = Button(axnext, 'Next district')
-#bnext.on_clicked(callback.next)
-#bprev = Button(axprev, 'Previous district')
-#bprev.on_clicked(callback.prev)
+axprev = mp.axes([0.5, 0.05, 0.2, 0.075])
+axnext = mp.axes([0.75, 0.05, 0.2, 0.075])
+text = mp.axes([0.0, 0.05, 0.0, 0.075])
 
 
+text.axis('off')
+bnext = Button(axnext, 'Next district')
+bnext.on_clicked(callback.next)
+bprev = Button(axprev, 'Previous district')
+bprev.on_clicked(callback.prev)
+"""
+text= ax
+textvar = text.text(0, 0, 1, fontsize=38)
+c=1
 ########Onclick
 def onclick(event):
-    lonpt,latpt = m(event.xdata, event.ydata, inverse=True)
-    PARAMS = {'latlng': str(latpt) + ',' + str(lonpt),
-              'key': gMapsAPIKey}
-    r = requests.get('https://maps.googleapis.com/maps/api/geocode/json', PARAMS)
-    data = r.json()
-    payload = data['results'][0]
-    inNC = False;
-    for component in payload['address_components']:
-        if ('administrative_area_level_1' in component['types']):
-            if (component['short_name'] == 'NC'):
-                inNC = True
-    if (inNC):
+    if event.button==1:
+        global c,district_colors
+        district_colors=['#0000e6','#6600cc','#00ff00','#ff3300','#997a00','#663300','#006666','#cccccc','#4d0000','#ffcc99','#33331a','#d98c8c','#33ffcc']
+        lonpt,latpt = m(event.xdata, event.ydata, inverse=True)
+        PARAMS = {'latlng': str(latpt) + ',' + str(lonpt),
+                  'key': gMapsAPIKey}
+        r = requests.get('https://maps.googleapis.com/maps/api/geocode/json', PARAMS)
+        data = r.json()
+        payload = data['results'][0]
+        inNC = False;
+        statenumbers=[]
         for component in payload['address_components']:
-            if ('administrative_area_level_2' in component['types']):
-                county = component['long_name'].replace(' County','')
-        for shape_dict in m.county_info:
-            countyname=shape_dict['NAME']
-            if (countyname == county):
-                colors[countyname]='#AAAAAA'
-            county_names.append(countyname)
-        ax = mp.gca()
-        for nshape,seg in enumerate(m.county):
-            if (county_names[nshape] == county):
-                color = colors[county_names[nshape]] 
-                poly = Polygon(seg,facecolor=color,edgecolor=color)
-                ax.add_patch(poly)
-                mp.gcf().canvas.draw_idle()
-        print(county)
-
+            if ('administrative_area_level_1' in component['types']):
+                if (component['short_name'] == 'NC'):
+                    inNC = True
+        if (inNC):
+            for component in payload['address_components']:
+                if ('administrative_area_level_2' in component['types']):
+                    county = component['long_name'].replace(' County','')
+            for shape_dict in m.county_info:
+                countyname=shape_dict['NAME']
+                statenumber=shape_dict['STATEFP']
+                if (countyname == county) and (statenumber=="37"):
+                    colors[countyname]=district_colors[c-1]
+                county_names.append(countyname)
+                statenumbers.append(statenumber)
+            ax = mp.gca()
+            for nshape,seg in enumerate(m.county):
+                if (county_names[nshape] == county) and (statenumbers[nshape]=="37"):
+                    color = colors[county_names[nshape]] 
+                    poly = Polygon(seg,facecolor=color,edgecolor=color)
+                    ax.add_patch(poly)
+                    mp.gcf().canvas.draw_idle()
+            print(county)
+    elif event.button==2:
+        c=c-1
+        if (c==0):
+            c=13
+        for txt in text.texts:
+            txt.set_visible(False)    
+        textvar = text.text(0, 0, c, fontsize=38)
+        mp.draw()        
+    elif event.button==3:
+        c=c+1
+        if (c==14):
+            c=1
+        for txt in text.texts:
+            txt.set_visible(False)    
+        textvar = text.text(0, 0, c, fontsize=38)
+        mp.draw()
 fig.canvas.mpl_connect('button_press_event', onclick)
 
-mp.show()
+
 
 mp.plot()
+    
 
 
 
-
-
-
+#########PLOT 2##############
 
 fig, ax = mp.subplots(figsize=(20,40))
 
