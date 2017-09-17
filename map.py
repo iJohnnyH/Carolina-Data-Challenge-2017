@@ -20,16 +20,38 @@ gMapsAPIKey = 'AIzaSyDCt_yZ6rzR2zNLUdJ8Fb8ChEmBhu8-YE8'
 #county_names = dw.query('https://data.world/justinmmott/nc-voter-registration', 'SELECT county FROM by_the_numbers')
 
 county_stuff = {}
-districts = []
+district = {}
+rep = [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+dem = [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+county_stuffog = {}
+county_stuffrn = {}
+reploss = 0 
+demloss = 0
+total = 0
+disW = [False,False,False,False,False,False,False,False,False,False,False,False,False,False]
+for i in range (1,14):
+    district[i] = set();
+visited = {}
 
 with open('By_The_Numbers.csv', mode ='r') as w:
     reader = csv.DictReader(w)
     for row in reader: 
-        county_stuff[row['county']] = [row['rep'] , row['dem']]
-
-
+        if row['county'] == 'Mcdowell':
+            county_stuff['McDowell'] = [int(row['rep']) , int(row['dem'])]
+            total = total + int(row['rep']) + int(row['dem'])
+            if (int(row['rep']) > int(row['dem'])):
+                county_stuffog['McDowell'] = True
+            elif (int(row['rep']) < int(row['dem'])):  
+                county_stuffog['McDowell'] = False  
+        else:
+            county_stuff[row['county']] = [int(row['rep']) , int(row['dem'])]
+            total = total + int(row['rep']) + int(row['dem'])
+            if (int(row['rep']) > int(row['dem'])):
+                county_stuffog[row['county']] = True
+            elif (int(row['rep']) < int(row['dem'])):  
+                county_stuffog[row['county']] = False  
 #Class created for previous and next buttons for districts
-"""
+"""z
 class Index(object):
     ind = 1
     def next(self, event):
@@ -105,8 +127,12 @@ bprev.on_clicked(callback.prev)
 text= ax
 textvar = text.text(0, 0, 1, fontsize=38)
 c=1
+visited1 = 0
+
 ########Onclick
 def onclick(event):
+    reploss = 0
+    demloss = 0
     if event.button==1:
         global c,district_colors
         district_colors=['#0000e6','#6600cc','#00ff00','#ff3300','#997a00','#663300','#006666','#cccccc','#4d0000','#ffcc99','#33331a','#d98c8c','#33ffcc']
@@ -126,6 +152,13 @@ def onclick(event):
             for component in payload['address_components']:
                 if ('administrative_area_level_2' in component['types']):
                     county = component['long_name'].replace(' County','')
+                    if county in visited.keys():
+                        visited1 = visited[county]
+                        district[visited1].remove(county)
+                    else:
+                        visited[county] = c
+                    district[c].add(county)
+
             for shape_dict in m.county_info:
                 countyname=shape_dict['NAME']
                 statenumber=shape_dict['STATEFP']
@@ -140,15 +173,80 @@ def onclick(event):
                     poly = Polygon(seg,facecolor=color,edgecolor=color)
                     ax.add_patch(poly)
                     mp.gcf().canvas.draw_idle()
-            print(county)
+            
     elif event.button==2:
-        c=c-1
-        if (c==0):
-            c=13
-        for txt in text.texts:
-            txt.set_visible(False)    
-        textvar = text.text(0, 0, c, fontsize=38)
-        mp.draw()        
+        for i in range(1,14):
+            for x in district[i]:
+                if(x == 'McDowell'):
+                    rep[i] = rep[i] + 9069
+                    dem[i] = dem[i] + 6438
+                else:
+                    rep[i] = rep[i] + int(county_stuff[x][0])
+                    dem[i] =  dem[i] + int(county_stuff[x][1])
+
+                    
+            if (rep[i] > dem[i]):
+                reploss = reploss + (rep[i] - dem[i])
+                disW[i] = True
+                demloss = demloss + dem[i]
+            elif (rep[i] < dem[i]):
+                demloss = demloss + (dem[i] - rep[i])
+                reploss = rep[i]
+
+        e = (reploss - demloss)/total    
+        m4 = Basemap(resolution = 'i',
+           projection = 'tmerc',
+
+           llcrnrlon=-84.3, llcrnrlat=33.8, urcrnrlon=-75.5, urcrnrlat=36.53,
+           lat_0=35.165, lon_0=-79.9)
+        m4.drawmapboundary(fill_color='#46bcec')
+        m4.fillcontinents(color='green',lake_color='#46bcec')
+        m4.drawcoastlines()
+        #m2.drawcounties(linewidth=0.5, linestyle='solid', color='white', antialiased=1, facecolor='none', ax=None, zorder=None, drawbounds=True)
+        m4.readshapefile('cb_2016_us_county_500k/cb_2016_us_county_500k', 'county')
+
+        m4.readshapefile('cb_2016_us_state_500k/cb_2016_us_state_500k', 'states')
+        statenumbers1=[]
+        county_names1 = []
+        colors1 = {}
+        for x in district.keys():   
+            for countyasdf in county_stuffog.keys():
+                if(countyasdf in district[x]):
+                    for shape_dict in m.county_info:
+                        countyname1=shape_dict['NAME']
+                        statenumber1=shape_dict['STATEFP']
+                        if (countyname1 == countyasdf) and (statenumber1=="37"):
+                            if(county_stuffog[countyname1]):
+                                if disW[int(x)]:
+                                    colors1[countyasdf] = 'red'
+                                else:
+                                    colors1[countyasdf] = 'blue'
+                            else:
+                                if disW[int(x)]:
+                                    colors1[countyasdf] = 'red'
+                                else:
+                                    colors1[countyasdf] = 'blue'
+                        county_names1.append(countyname1)
+                        statenumbers1.append(statenumber1)
+                    ax = mp.gca()
+                    for nshape,seg in enumerate(m.county):
+                        if (county_names1[nshape] == countyasdf) and (statenumbers1[nshape]=="37"):
+                            color = colors1[countyasdf] 
+                            poly = Polygon(seg,facecolor=color,edgecolor=color)
+                            ax.add_patch(poly)
+
+        for shape_dict in m.states_info:
+            statename=shape_dict['NAME']
+            if statename in ['South Carolina','Tennessee','Georgia','Virginia']:
+                colors[statename]='#ffffff'
+            state_names.append(statename)
+        ax = mp.gca()
+        for nshape,seg in enumerate(m.states):
+            if state_names[nshape] in ['South Carolina','Tennessee','Georgia','Virginia']:
+                color = colors[state_names[nshape]]
+                poly = Polygon(seg,facecolor=color,edgecolor=color)
+                ax.add_patch(poly)   
+                mp.gcf().canvas.draw_idle()
     elif event.button==3:
         c=c+1
         if (c==14):
@@ -182,6 +280,68 @@ m2.readshapefile('cb_2013_us_cd113_500k/cb_2013_us_cd113_500k', 'district')
 m2.readshapefile('cb_2016_us_state_500k/cb_2016_us_state_500k', 'states')
 state_names = []
 colors={}
+for shape_dict in m.states_info:
+    statename=shape_dict['NAME']
+    if statename in ['South Carolina','Tennessee','Georgia','Virginia']:
+        colors[statename]='#ffffff'
+    state_names.append(statename)
+ax = mp.gca()
+for nshape,seg in enumerate(m.states):
+    if state_names[nshape] in ['South Carolina','Tennessee','Georgia','Virginia']:
+        color = colors[state_names[nshape]]
+        poly = Polygon(seg,facecolor=color,edgecolor=color)
+        ax.add_patch(poly)
+mp.plot()
+
+fig, ax = mp.subplots(figsize=(20,40))
+
+###################################
+
+m3 = Basemap(resolution = 'i',
+           projection = 'tmerc',
+
+           llcrnrlon=-84.3, llcrnrlat=33.8, urcrnrlon=-75.5, urcrnrlat=36.53,
+           lat_0=35.165, lon_0=-79.9)
+m3.drawmapboundary(fill_color='#46bcec')
+m3.fillcontinents(color='green',lake_color='#46bcec')
+m3.drawcoastlines()
+#m2.drawcounties(linewidth=0.5, linestyle='solid', color='white', antialiased=1, facecolor='none', ax=None, zorder=None, drawbounds=True)
+m3.readshapefile('cb_2016_us_county_500k/cb_2016_us_county_500k', 'county')
+
+m3.readshapefile('cb_2016_us_state_500k/cb_2016_us_state_500k', 'states')
+statenumbers1=[]
+county_names1 = []
+colors1 = {}
+
+for countyasdf in county_stuffog.keys():
+    for shape_dict in m.county_info:
+        countyname1=shape_dict['NAME']
+        statenumber1=shape_dict['STATEFP']
+        if (countyname1 == countyasdf) and (statenumber1=="37"):
+            if(county_stuffog[countyname1]):
+                colors1[countyasdf]= 'red'
+            else:
+                colors1[countyasdf]= 'blue'
+        county_names1.append(countyname1)
+        statenumbers1.append(statenumber1)
+    ax = mp.gca()
+    for nshape,seg in enumerate(m.county):
+        if (county_names1[nshape] == countyasdf) and (statenumbers1[nshape]=="37"):
+            color = colors1[countyasdf] 
+            poly = Polygon(seg,facecolor=color,edgecolor=color)
+            ax.add_patch(poly)
+for shape_dict in m.county_info:
+    countyname=shape_dict['NAME']
+    if countyname in ['McDowell']:
+        colors[countyname]='red'
+    county_names.append(countyname)
+ax = mp.gca()
+for nshape,seg in enumerate(m.county):
+    if county_names[nshape] in ['McDowell']:
+        color = colors[county_names[nshape]] 
+        poly = Polygon(seg,facecolor=color,edgecolor=color)
+        ax.add_patch(poly)
+
 for shape_dict in m.states_info:
     statename=shape_dict['NAME']
     if statename in ['South Carolina','Tennessee','Georgia','Virginia']:
