@@ -14,6 +14,7 @@ from matplotlib.colors import Normalize
 gMapsAPIKey = 'AIzaSyDCt_yZ6rzR2zNLUdJ8Fb8ChEmBhu8-YE8'
 
 county_stuff = {}
+districts = []
 
 with open('By_The_Numbers.csv', mode ='r') as w:
     reader = csv.DictReader(w)
@@ -124,11 +125,9 @@ def onclick(event):
                 ax.add_patch(poly)
                 mp.gcf().canvas.draw_idle()
         print(county)
+     
 
 fig.canvas.mpl_connect('button_press_event', onclick)
-
-mp.show()
-
 mp.plot()
 
 
