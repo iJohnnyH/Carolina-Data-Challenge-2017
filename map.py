@@ -5,30 +5,56 @@ import numpy as np
 import json
 import requests
 
+from matplotlib.widgets import Button
 from mpl_toolkits.basemap import Basemap
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
 
 gMapsAPIKey = 'AIzaSyDCt_yZ6rzR2zNLUdJ8Fb8ChEmBhu8-YE8'
-dataset_key = 'https://data.world/justinmmott/nc-voter-registration'
-dataset_local = dw.load_dataset(dataset_key)  # cached under ~/.dw/cache
+#dataset_key = 'https://data.world/justinmmott/nc-voter-registration'
+#dataset_local = dw.load_dataset(dataset_key)  # cached under ~/.dw/cache
 #dataset_local.describe('actual_voter_registration')
-results = dw.query('https://data.world/justinmmott/nc-voter-registration', 'SELECT * FROM actual_voter_registration')
-print (results.table[1])
+#results = dw.query('https://data.world/justinmmott/nc-voter-registration', 'SELECT * FROM actual_voter_registration')
+#print (results.table[1])
 
+
+#Class created for previous and next buttons for districts
+class Index(object):
+    ind = 1
+    def next(self, event):
+        self.ind += 1
+        if (self.ind > 13):
+            self.ind = 1
+        #for txt in text.texts:
+        #    txt.set_visible(False)
+        #textvar = text.text(0, 0, self.ind, fontsize=28)
+        #plt.draw()
+        print (self.ind)
+    def prev(self, event):
+        self.ind -= 1
+        if (self.ind < 1):
+            self.ind = 13
+        #for txt in text.texts:
+        #    txt.set_visible(False)
+        #textvar = text.text(0, 0, self.ind, fontsize=28)
+        #plt.draw()
+        print (self.ind)
+
+
+#Sets plot size
 fig, ax = mp.subplots(figsize=(20,40))
 
 botlat = 33.8
 botlong = -84.3
 toplat = 36.545
 toplong = -75.4
-
+#Creates map
 m = Basemap(resolution = 'i',
            projection = 'tmerc',
            llcrnrlon=botlong, llcrnrlat=botlat, urcrnrlon=toplong, urcrnrlat=toplat,
            lat_0=(botlat+toplat)/2, lon_0=(botlong + toplong)/2)
-
+#Draws lines for map
 m.drawmapboundary(fill_color='#46bcec')
 m.fillcontinents(color='green',lake_color='#46bcec')
 m.drawcoastlines()
@@ -37,6 +63,7 @@ m.readshapefile('cb_2016_us_county_500k/cb_2016_us_county_500k', 'county')
 county_names = []
 colors={}
 
+#Finds state lines and colors other states
 m.readshapefile('cb_2016_us_state_500k/cb_2016_us_state_500k', 'states')
 state_names = []
 colors={}
@@ -53,9 +80,16 @@ for nshape,seg in enumerate(m.states):
         ax.add_patch(poly)
 
 
-
-
-
+callback = Index()
+#axprev = mp.axes([0.5, 0.05, 0.2, 0.075])
+#axnext = mp.axes([0.75, 0.05, 0.2, 0.075])
+#text = mp.axes([0.0, 0.05, 0.0, 0.075])
+#textvar = text.text(0, 0, 1, fontsize=28)
+#text.axis('off')
+#bnext = Button(axnext, 'Next district')
+#bnext.on_clicked(callback.next)
+#bprev = Button(axprev, 'Previous district')
+#bprev.on_clicked(callback.prev)
 
 
 ########Onclick
@@ -67,7 +101,6 @@ def onclick(event):
     data = r.json()
     payload = data['results'][0]
     inNC = False;
-
     for component in payload['address_components']:
         if ('administrative_area_level_1' in component['types']):
             if (component['short_name'] == 'NC'):
@@ -87,11 +120,21 @@ def onclick(event):
                 color = colors[county_names[nshape]] 
                 poly = Polygon(seg,facecolor=color,edgecolor=color)
                 ax.add_patch(poly)
+                mp.gcf().canvas.draw_idle()
         print(county)
 
 fig.canvas.mpl_connect('button_press_event', onclick)
 
+mp.show()
+
 mp.plot()
+
+
+
+
+
+
+
 fig, ax = mp.subplots(figsize=(20,40))
 
 m2 = Basemap(resolution = 'i',
@@ -120,3 +163,6 @@ for nshape,seg in enumerate(m.states):
         poly = Polygon(seg,facecolor=color,edgecolor=color)
         ax.add_patch(poly)
 mp.show()
+
+
+
