@@ -12,7 +12,6 @@ from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
 
 gMapsAPIKey = 'AIzaSyDCt_yZ6rzR2zNLUdJ8Fb8ChEmBhu8-YE8'
-gMapsAPIKey = 'AIzaSyDCt_yZ6rzR2zNLUdJ8Fb8ChEmBhu8-YE8'
 dataset_key = 'https://data.world/justinmmott/nc-voter-registration'
 dataset_local = dw.load_dataset(dataset_key,force_update=True)  # cached under ~/.dw/cache
 dataset_local.describe('by_the_numbers')
