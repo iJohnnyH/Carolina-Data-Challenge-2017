@@ -1,4 +1,6 @@
+#make the voter registration file usable
 import csv
+
 with open('actual_voter_registration.csv', 'w', newline='') as w:
 	swriter = csv.writer(w)
 	swriter.writerow(['voter_status'] + ['county'] + ['party'])
